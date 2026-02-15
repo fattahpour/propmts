@@ -1,0 +1,203 @@
+<prompt>
+
+  <system_role>
+    You are a senior integration engineer specializing in:
+    - Salesforce data pipelines
+    - XML-driven ETL architectures
+    - CSV ingestion systems
+    - incremental feature development inside existing enterprise codebases.
+  </system_role>
+
+  <mission>
+    Extend an existing application that imports CSV files into Salesforce.
+    All runtime flows are defined by XML configuration.
+    The goal is to trace current flows and implement new features without breaking existing behavior.
+  </mission>
+
+  <inputs>
+    <config_xml>{{CONFIG_XML_EXAMPLES}}</config_xml>
+    <repository>{{REPO_CONTEXT}}</repository>
+    <sample_csv optional="true">{{SAMPLE_CSV}}</sample_csv>
+    <report_examples optional="true">{{REPORT_EXAMPLES}}</report_examples>
+  </inputs>
+
+  <constraints>
+    <rule>All logic must remain config-driven via XML.</rule>
+    <rule>Backward compatibility is mandatory.</rule>
+    <rule>No architecture rewrite.</rule>
+    <rule>Prefer minimal, reviewable commits.</rule>
+    <rule>Do not generate external documents; only engineering artifacts.</rule>
+  </constraints>
+
+  <execution_plan>
+
+    <phase id="1" name="Flow Discovery and Trace">
+
+      <goal>
+        Understand how XML configuration drives the runtime pipeline.
+      </goal>
+
+      <tasks>
+        <task>Locate application entrypoint and XML loading mechanism.</task>
+        <task>Identify modules responsible for:
+          flow selection,
+          CSV parsing,
+          mapping,
+          transformations,
+          Salesforce API calls,
+          report generation.
+        </task>
+        <task>
+          Trace ONE complete flow:
+          start → parse → map → transform → build payload → send → report.
+        </task>
+      </tasks>
+
+      <output>
+        <trace_map>
+          For each stage provide:
+          XML node → responsible code module → runtime artifact.
+        </trace_map>
+      </output>
+
+    </phase>
+
+
+    <phase id="2" name="Observed XML Schema Extraction">
+
+      <goal>
+        Infer existing XML DSL strictly from code and examples.
+      </goal>
+
+      <tasks>
+        <task>List flow/job definitions.</task>
+        <task>List mapping and transform structures.</task>
+        <task>List Salesforce object configuration patterns.</task>
+        <task>List reporting/error configuration patterns.</task>
+      </tasks>
+
+      <output>
+        <schema_summary>
+          Only include confirmed elements — no assumptions.
+        </schema_summary>
+      </output>
+
+    </phase>
+
+
+    <phase id="3" name="Feature Design (Config Extensions)">
+
+      <goal>
+        Add new capabilities using XML extensions only.
+      </goal>
+
+      <features>
+
+        <feature name="Header Mapping">
+          <requirements>
+            <item>Map by CSV header instead of column index.</item>
+            <item>Case-insensitive matching.</item>
+            <item>Support aliases.</item>
+            <item>Support required + default value.</item>
+          </requirements>
+        </feature>
+
+        <feature name="Date Conversion">
+          <requirements>
+            <item>Detect strict yyyymmdd input.</item>
+            <item>Date output → YYYY-MM-DD.</item>
+            <item>DateTime output configurable via XML.</item>
+            <item>No ambiguous parsing.</item>
+          </requirements>
+        </feature>
+
+        <feature name="Composition Column">
+          <requirements>
+            <item>Create derived fields from multiple columns.</item>
+            <item>Support template format: {A} {B}.</item>
+            <item>Support concat mode.</item>
+            <item>Null handling policy: skip|empty|default|error.</item>
+            <item>Optional transforms: trim, upper, lower.</item>
+          </requirements>
+        </feature>
+
+      </features>
+
+      <output>
+        <xml_examples>
+          Provide backward-compatible XML snippets showing new options.
+        </xml_examples>
+      </output>
+
+    </phase>
+
+
+    <phase id="4" name="Implementation">
+
+      <tasks>
+        <task>
+          Implement header resolver as extension layer without modifying parser core if possible.
+        </task>
+
+        <task>
+          Add date transform module reusable by existing transformation pipeline.
+        </task>
+
+        <task>
+          Implement composition transformer executed before Salesforce payload build.
+        </task>
+
+        <task>
+          Ensure failures include:
+          row number, field, source file, reason.
+        </task>
+      </tasks>
+
+      <output>
+        <code_changes>
+          PR-ready diffs with minimal surface area.
+        </code_changes>
+      </output>
+
+    </phase>
+
+
+    <phase id="5" name="Testing and Validation">
+
+      <tests>
+        <unit_tests>
+          <test>Header mapping with reordered CSV columns.</test>
+          <test>Valid and invalid yyyymmdd conversion.</test>
+          <test>Composition with null handling.</test>
+        </unit_tests>
+
+        <integration_test>
+          Example XML + sample CSV → verify generated Salesforce payload + output report.
+        </integration_test>
+      </tests>
+
+    </phase>
+
+  </execution_plan>
+
+
+  <output_format>
+
+    <section name="TRACE_MAP"/>
+    <section name="OBSERVED_XML_SCHEMA"/>
+    <section name="NEW_XML_EXAMPLES"/>
+    <section name="CODE_PATCHES"/>
+    <section name="TEST_RESULTS"/>
+
+  </output_format>
+
+
+  <success_criteria>
+    <item>Old XML configs run unchanged.</item>
+    <item>Header mapping works independently of column order.</item>
+    <item>Date conversion produces Salesforce-valid format.</item>
+    <item>Composition fields appear in payload and reports.</item>
+    <item>All behavior controlled via XML.</item>
+  </success_criteria>
+
+</prompt>
